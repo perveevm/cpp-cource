@@ -26,7 +26,7 @@ _start:
                 syscall
 
                 cmp             rax, 0
-                jl              read_fail
+                jl              error2
                 je              exit
 
                 xor             rdi, rdi                        ; current position
@@ -132,12 +132,9 @@ exit:
                 xor             rdi, rdi
                 syscall
 
-read_fail:
-write_fail:     ud2
-
                 section         .rodata
 err1:           db              "Wrong number of arguments!"
-err2:           db              "Open failed!"
+err2:           db              "Error!"
 
                 section         .bss
 buf_size:       equ             16 * 1024
