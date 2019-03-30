@@ -15,7 +15,7 @@ _start:
                 syscall                                         ; open file
                 
                 mov             r15, rax                        ; file descriptor
-                xor             r14, r14                        ; answer
+                mov             r14, 1                          ; answer
                 mov             r11, 1                          ; 1 if prev is whitespace, 0 else
 
 read_loop:
@@ -38,8 +38,8 @@ handler_loop:
 
                 cmp             rax, 1
                 je              handler_loop_end
-                cmp             r12, data_buffer
-                je              good_1
+                ; cmp             r12, data_buffer
+                ; je              good_1
                 cmp             r11, 1
                 jne             handler_loop_end
 good_1:
