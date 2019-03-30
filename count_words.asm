@@ -33,6 +33,7 @@ _start:
 
 .next_byte:
                 movzx           edx, byte [rsi + rax]
+                movzx           r14, byte [rsi + rax]
                 cmp             dl, 9
                 je              .good1
                 cmp             dl, 10
@@ -67,6 +68,21 @@ exit:
                 mov             rax, 3
                 syscall
 
+                mov             rdx, r14
+                cmp             dl, 9
+                je              lbl1
+                cmp             dl, 10
+                je              lbl1
+                cmp             dl, 11
+                je              lbl1
+                cmp             dl, 12
+                je              lbl1
+                cmp             dl, 13
+                je              lbl1
+                cmp             dl, 32
+                je              lbl1
+                inc             rbx
+lbl1:
                 mov             rax, rbx
                 call            write_number
 
