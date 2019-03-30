@@ -4,7 +4,7 @@
 _start:
                 pop             rax
                 cmp             rax, 2
-                jne             error1
+                jne             error
 
                 pop             rax
                 pop             rdi
@@ -13,7 +13,7 @@ _start:
                 xor             rdx, rdx
                 syscall
                 cmp             rax, 0
-                jl              error2
+                jl              error
 
                 mov             rcx, rax                        ; copy of rax for all next reads
                 
@@ -26,7 +26,7 @@ _start:
                 syscall
 
                 cmp             rax, 0
-                jl              error2
+                jl              error
                 je              exit
 
                 xor             rdi, rdi                        ; current position
@@ -111,19 +111,11 @@ while2:
 
                 call            exit
 
-error1:
+error:
                 mov             rax, 1
                 mov             rdi, 1
-                mov             rsi, err1
-                mov             rdx, 26
-                syscall
-                call            exit
-
-error2:
-                mov             rax, 1
-                mov             rdi, 1
-                mov             rsi, err2
-                mov             rdx, 12
+                mov             rsi, err
+                mov             rdx, 6
                 syscall
                 call            exit
 
@@ -133,8 +125,7 @@ exit:
                 syscall
 
                 section         .rodata
-err1:           db              "Wrong number of arguments!"
-err2:           db              "Error!"
+err:            db              "Error!"
 
                 section         .bss
 buf_size:       equ             16 * 1024
