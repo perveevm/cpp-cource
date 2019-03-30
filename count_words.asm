@@ -1,138 +1,146 @@
                 section         .text
                 global          _start
-_start:
 
+_start:
                 pop             rax
                 cmp             rax, 2
-                jne             error                           ; bad arguments
+                jne             error1
 
                 pop             rax
-                pop             rax
-                mov             rdi, rax
+                pop             rdi
                 mov             rax, 2
                 xor             rsi, rsi
                 xor             rdx, rdx
-                syscall                                         ; open file
+                syscall
+                cmp             rax, 0
+                jl              error2
+
+                mov             rcx, rax                        ; copy of rax for all next reads
                 
-                mov             r15, rax                        ; file descriptor
-                mov             r14, 1                          ; answer
-                mov             r11, 1                          ; 1 if prev is whitespace, 0 else
+                xor             rbx, rbx                        ; words counter
 
-read_loop:
-                mov             rax, 0
-                mov             rdi, r15
-                mov             rsi, data_buffer
-                mov             rdx, 1024
-                syscall                                         ; read data
-
-                cmp             rax, 0
-                jl              error
-                je              print_answer
-
-                mov             r13, rax                        ; rest bytes
-                mov             r12, data_buffer                ; data pointer
-handler_loop:
+                mov             rdi, rcx
                 xor             rax, rax
-                mov             al, [r12]
-                call check_byte
-
-                cmp             rax, 1
-                je              handler_loop_end
-                ; cmp             r12, data_buffer
-                ; je              good_1
-                cmp             r11, 1
-                jne             handler_loop_end
-good_1:
-                inc             r14                             ; current is whitespace, prev is not 
-
-handler_loop_end:
-                mov             r11, rax
-                inc             r12
-                dec             r13
-                cmp             r13, 0
-                jne             handler_loop
-
-                jmp             read_loop
-
-print_number:
-                cmp             r11, 1
-                je              end1
-                inc             r14
-
-end1:
-                mov             [buffer + 20], word 0x0a
-                mov             r9,  buffer + 19                ; buffer ptr
-                mov             r8,  2                          ; number of digits
-loop:
-                xor             rdx, rdx
-                mov             rbx, 10
-                div             rbx                             ; dividing number by 10
-
-                add             rdx, '0'                
-                mov             [r9], dl                        ; loading digit to buffer
-                dec             r9
-                inc             r8                              ; updating variables
-
-                dec             r10
+                mov             rsi, buf
+                mov             rdx, buf_size
+                syscall
 
                 cmp             rax, 0
-                je              end
-                jg				loop
-end:
-                inc             r8
+                jl              read_fail
+                je              exit
 
+                xor             rdi, rdi                        ; current position
+
+skip_spaces:
+                mov             r10, 9
+                                                                ; check spaces check symbols 9, 10, 11, 12, 13
+check_spaces:
+                cmp             [buf + rdi], r10b
+                je              cycle_end
+
+                inc             r10
+                cmp             r10, 14
+                jl              check_spaces
+
+                mov             r10, 32
+                cmp             [buf + rdi], r10b
+                je              cycle_end
+
+                mov             r10, 0
+                cmp             [buf + rdi], r10b
+                je              print_res
+                
+                inc             rbx
+                jmp             skip_word
+
+skip_word:
+                mov             r10, 9
+check_spaces2:
+                cmp             [buf + rdi], r10b
+                je              skip_spaces
+
+                inc             r10
+                cmp             r10, 14
+                jl              check_spaces2
+
+                mov             r10, 32
+                cmp             [buf + rdi], r10b
+                je              skip_spaces
+
+                mov             r10, 0
+                cmp             [buf + rdi], r10b
+                je              print_res
+
+                inc             rdi
+                jmp             skip_word               
+
+cycle_end:
+                inc             rdi
+                jmp             skip_spaces
+
+                                                                        ; print_res prints rax to stdin
+print_res:
+                mov             rax, rbx
+                xor             rdi, rdi
+while:
+                xor             rdx, rdx                                ; high part = 0
+                mov             rbx, 10
+                div             rbx
+                add             rdx, 48
+                mov             [num + rdi], rdx
+                inc             rdi
+
+                cmp             rax, 0
+                jg              while
+
+                mov             rbx, rdi
+                dec             rbx
+
+                                                                        ; real printing
+while2:
+                mov             rdx, 1                                  ; size of output
                 mov             rax, 1
                 mov             rdi, 1
-                mov             rsi, r9
-                mov             rdx, r8
-                syscall                                         ; printing number
+                mov             rsi, num
+                add             rsi, rbx
+                syscall
+                dec             rbx
 
-                ret
+                cmp             rbx, 0
+                jnl             while2
 
-check_byte:
-                mov             rbx, 1
+                call            exit
 
-                cmp             al, 0x09
-                je              check_byte_end
-                cmp             al, 0x0a
-                je              check_byte_end
-                cmp             al, 0x0b
-                je              check_byte_end
-                cmp             al, 0x0c
-                je              check_byte_end
-                cmp             al, 0x0d
-                je              check_byte_end
-                cmp             al, 0x20
-                je              check_byte_end
+error1:
+                mov             rax, 1
+                mov             rdi, 1
+                mov             rsi, err1
+                mov             rdx, 26
+                syscall
+                call            exit
 
-                xor             rbx, rbx
-
-check_byte_end:
-                mov             rax, rbx
-                ret
-
-print_answer:
-                mov             rax, r14
-                call            print_number
-                jmp             exit
+error2:
+                mov             rax, 1
+                mov             rdi, 1
+                mov             rsi, err2
+                mov             rdx, 12
+                syscall
+                call            exit
 
 exit:
                 mov             rax, 60
                 xor             rdi, rdi
-                syscall                                         ; exit
-
-error:
-                mov             rax, 1
-                mov             rdi, 1
-                mov             rsi, error_msg
-                mov             rdx, error_msg_size
                 syscall
-                jmp exit
 
-                section .bss
-buffer:         resb            22
-data_buffer:    resb            1024
+read_fail:
+write_fail:     ud2
 
-                section .rodata
-error_msg:      db              "Error!",0x0a
-error_msg_size: equ             $ - error_msg
+                section         .rodata
+err1:           db              "Wrong number of arguments!"
+err2:           db              "Open failed!"
+
+                section         .bss
+buf_size:       equ             16 * 1024
+num_size:       equ             20
+buf:            resb            buf_size
+num:            resb            num_size
