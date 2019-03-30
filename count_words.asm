@@ -15,7 +15,7 @@ _start:
                 cmp             rax, 0
                 jl              error
 
-                mov             rcx, rax                        ; copy of rax for all next reads
+                mov             rcx, rax                        
                 
                 xor             rbx, rbx                        ; words counter
 
@@ -33,7 +33,7 @@ _start:
 
 skip_spaces:
                 mov             r10, 9
-                                                                ; check spaces check symbols 9, 10, 11, 12, 13
+                                                                ; check spaces
 check_spaces:
                 cmp             [buf + rdi], r10b
                 je              cycle_end
@@ -78,12 +78,12 @@ cycle_end:
                 inc             rdi
                 jmp             skip_spaces
 
-                                                                        ; print_res prints rax to stdin
+                                                                        
 print_res:
                 mov             rax, rbx
                 xor             rdi, rdi
 while:
-                xor             rdx, rdx                                ; high part = 0
+                xor             rdx, rdx                                
                 mov             rbx, 10
                 div             rbx
                 add             rdx, 48
@@ -96,8 +96,8 @@ while:
                 mov             rbx, rdi
                 dec             rbx
 
-                                                                        ; real printing
-while2:
+                                                                        ; printing
+while_print:
                 mov             rdx, 1                                  ; size of output
                 mov             rax, 1
                 mov             rdi, 1
@@ -107,7 +107,7 @@ while2:
                 dec             rbx
 
                 cmp             rbx, 0
-                jnl             while2
+                jnl             while_print
 
                 call            exit
 
