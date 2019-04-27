@@ -62,8 +62,8 @@ struct big_integer {
 
     bool is_zero() const;
 private:
-    bool sign;
-    std::vector<ui> data;
+    bool sign = false;
+    std::vector<ui> data();
 
     void fit();
     void fixSign();
