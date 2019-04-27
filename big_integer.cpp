@@ -199,7 +199,7 @@ big_integer operator+(big_integer const& a, big_integer const& b) {
 }
 
 big_integer operator-(big_integer const& a, big_integer const& b) {
-    return a + (-b); // TODO: replace this
+    return a + (-b);
 }
 
 void mul(std::vector<ui> const& a, std::vector<ui> const& b, std::vector<ui>& res) {
