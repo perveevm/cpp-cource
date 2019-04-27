@@ -128,18 +128,7 @@ bool operator!=(big_integer const& a, big_integer const& b) {
 }
 
 bool operator<(big_integer const& a, big_integer const& b) {
-    if (a.sign != b.sign) {
-        return a.sign;
-    }
-    if (a.data.size() != b.data.size()) {
-        return a.data.size() < b.data.size();
-    }
-    for (size_t i = a.data.size(); i > 0; --i) {
-        if (a.data[i - 1] != b.data[i - 1]) {
-            return a.data[i - 1] < b.data[i - 1];
-        }
-    }
-    return false;
+    return (a - b).sign;
 }
 
 bool operator>(big_integer const& a, big_integer const& b) {
@@ -362,7 +351,7 @@ big_integer operator/(big_integer const& a, big_integer const& b) {
             ui cur_approx = get_approx(tmp[m], tmp[m - 1], divisor);
             mul_long_short(abs_b.data, cur_approx, div);
 
-            while ((cur_approx >= 0) && compare_vectors(tmp, div)) {
+            while (compare_vectors(tmp, div)) {
                 mul_long_short(abs_b.data, --cur_approx, div);
             }
             
