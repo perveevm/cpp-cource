@@ -199,7 +199,7 @@ big_integer operator+(big_integer const& a, big_integer const& b) {
 }
 
 big_integer operator-(big_integer const& a, big_integer const& b) {
-    return a + (-b);
+    return a + (-b); // TODO: replace this
 }
 
 void mul(std::vector<ui> const& a, std::vector<ui> const& b, std::vector<ui>& res) {
@@ -329,46 +329,52 @@ big_integer operator/(big_integer const& a, big_integer const& b) {
     abs_a.fit();
     abs_b.fit();
 
-    size_t len = n - m + 1;
+    size_t l = n - m + 1;
     ui divisor = abs_b.data.back();
 
-    std::vector<ui> temp(len);
-    std::vector<ui> dev(m + 1), div(m + 1, 0);
+    std::vector<ui> temp(l);
+    std::vector<ui> tmp(m + 1), div(m + 1, 0);
 
     for (size_t i = 0; i < m; i++) {
-        dev[i] = abs_a.data[n + i - m];
+        tmp[i] = abs_a.data[n + i - m];
     }
-    dev[m] = abs_a.get_digit(n);
+    tmp[m] = abs_a.get_digit(n);
 
     if (abs_b.data.size() == 1) {
-        for (size_t i = 0; i < len; ++i) {
-            dev[0] = abs_a.data[n - m - i];
-            size_t ri = len - 1 - i;
-            ui tq = get_approx(dev[m], dev[m - 1], divisor);
-            mul_long_short(abs_b.data, tq, div);
-            sub_vectors(dev, div);
+        for (size_t i = 0; i < l; ++i) {
+            tmp[0] = abs_a.data[n - m - i];
+            size_t rest = l - 1 - i;
+
+            ui cur_approx = get_approx(tmp[m], tmp[m - 1], divisor);
+            mul_long_short(abs_b.data, cur_approx, div);
+            sub_vectors(tmp, div);
+
             for (size_t j = m; j > 0; --j) {
-                dev[j] = dev[j - 1];
+                tmp[j] = tmp[j - 1];
             }
-            temp[ri] = tq;
+            temp[rest] = cur_approx;
+        }
+    } else {
+        for (size_t i = 0; i < l; ++i) {
+            tmp[0] = abs_a.data[n - m - i];
+            size_t rest = l - 1 - i;
+
+            ui cur_approx = get_approx(tmp[m], tmp[m - 1], divisor);
+            mul_long_short(abs_b.data, cur_approx, div);
+
+            while ((cur_approx >= 0) && compare_vectors(tmp, div)) {
+                mul_long_short(abs_b.data, --cur_approx, div);
+            }
+            
+            sub_vectors(tmp, div);
+
+            for (size_t j = m; j > 0; --j) {
+                tmp[j] = tmp[j - 1];
+            }
+            temp[rest] = cur_approx;
         }
     }
-    else {
-        for (size_t i = 0; i < len; ++i) {
-            dev[0] = abs_a.data[n - m - i];
-            size_t ri = len - 1 - i;
-            ui tq = get_approx(dev[m], dev[m - 1], divisor);
-            mul_long_short(abs_b.data, tq, div);
-            while ((tq >= 0) && compare_vectors(dev, div)) {
-                mul_long_short(abs_b.data, --tq, div);
-            }
-            sub_vectors(dev, div);
-            for (size_t j = m; j > 0; --j) {
-                dev[j] = dev[j - 1];
-            }
-            temp[ri] = tq;
-        }
-    }
+
     big_integer res(a.sign ^ b.sign, temp);
     res.fixSign();
     return res;
