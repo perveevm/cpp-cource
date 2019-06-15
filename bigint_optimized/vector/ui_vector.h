@@ -31,8 +31,10 @@ public:
 private:
     size_t len;
 
-    ui element;
-    std::shared_ptr<std::vector<ui>> elements;
+    union data {
+        ui element;
+        std::shared_ptr<std::vector<ui>> elements;
+    } _data;
 
     bool small() const;
 
