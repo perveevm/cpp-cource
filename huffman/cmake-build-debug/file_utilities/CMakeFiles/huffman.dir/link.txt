@@ -1,1 +1,0 @@
-/usr/bin/c++   -Wall -std=c++11 -O2 -pedantic -g -fsanitize=address,undefined -D_GLIBCXX_DEBUG   CMakeFiles/huffman.dir/buffered_reader.cpp.o CMakeFiles/huffman.dir/buffered_writer.cpp.o CMakeFiles/huffman.dir/huffman_file_compressor.cpp.o CMakeFiles/huffman.dir/huffman_file_decompressor.cpp.o CMakeFiles/huffman.dir/main.cpp.o  -o huffman ../huffman_lib/libhuffman_lib.a 

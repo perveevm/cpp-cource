@@ -1,9 +1,0 @@
-/home/misha/CLionProjects/huffman/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/home/misha/CLionProjects/huffman/cmake-build-debug/CMakeFiles/edit_cache.dir
-/home/misha/CLionProjects/huffman/cmake-build-debug/file_utilities/CMakeFiles/rebuild_cache.dir
-/home/misha/CLionProjects/huffman/cmake-build-debug/file_utilities/CMakeFiles/edit_cache.dir
-/home/misha/CLionProjects/huffman/cmake-build-debug/file_utilities/CMakeFiles/huffman.dir
-/home/misha/CLionProjects/huffman/cmake-build-debug/file_utilities/CMakeFiles/huffman_tests.dir
-/home/misha/CLionProjects/huffman/cmake-build-debug/huffman_lib/CMakeFiles/rebuild_cache.dir
-/home/misha/CLionProjects/huffman/cmake-build-debug/huffman_lib/CMakeFiles/huffman_lib.dir
-/home/misha/CLionProjects/huffman/cmake-build-debug/huffman_lib/CMakeFiles/edit_cache.dir
