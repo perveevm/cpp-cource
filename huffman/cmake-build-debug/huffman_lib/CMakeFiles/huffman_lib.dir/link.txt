@@ -1,0 +1,2 @@
+/usr/bin/ar qc libhuffman_lib.a  CMakeFiles/huffman_lib.dir/accumulator.cpp.o CMakeFiles/huffman_lib.dir/code_word.cpp.o CMakeFiles/huffman_lib.dir/huffman_decoder.cpp.o CMakeFiles/huffman_lib.dir/huffman_encoder.cpp.o CMakeFiles/huffman_lib.dir/huffman_tree.cpp.o
+/usr/bin/ranlib libhuffman_lib.a
