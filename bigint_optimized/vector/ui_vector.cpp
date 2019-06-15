@@ -1,146 +1,190 @@
 #include "ui_vector.h"
 #include <memory>
-#include <algorithm>
-#include <cassert>
+#include <cstring>
 
-size_t ui_vector::size() const {
-    return len;
+size_t ui_vector::get_new_capacity(size_t const &cur_cap) {
+    return cur_cap == 0 ? SMALL_SIZE : cur_cap * 2;
 }
 
-bool ui_vector::empty() const {
-    return size() == 0;
+u_int *copy_data(const u_int *source, size_t const &count, size_t const &capacity) {
+    u_int *res = new u_int[capacity];
+    memcpy(res, source, count * sizeof(u_int));
+    memset(res + count, 0, (capacity - count) * sizeof(u_int));
+    return res;
 }
 
-ui_vector::ui_vector(size_t curlen) {
-    if (curlen > 1) {
-        _data.elements = std::make_shared<std::vector<ui>>(curlen);
-    }
-    len = curlen;
+bool have_to_decrease(size_t const &size_, size_t const &capacity_) {
+    return size_ * 4 < capacity_;
 }
 
-ui ui_vector::operator[](size_t ind) const {
-    if (small()) {
-        return _data.element;
-    }
-    return _data.elements->operator[](ind);
+bool ui_vector::is_big() const {
+    return data != union_data.small_data;
 }
 
-ui &ui_vector::operator[](size_t ind) {
-    if (small()) {
-        return _data.element;
-    }
-    unique();
-    return _data.elements->operator[](ind);
-}
-
-ui ui_vector::back() const {
-    if (small()) {
-        return _data.element;
-    }
-    return _data.elements->back();
-}
-
-ui &ui_vector::back() {
-    if (small()) {
-        return _data.element;
-    }
-    unique();
-    return _data.elements->back();
-}
-
-void ui_vector::resize(size_t curlen) {
-    if (small()) {
-        if (curlen > 1) {
-            _data.elements = std::make_shared<std::vector<ui>>(curlen, _data.element);
-        }
+void ui_vector::change_capacity(size_t const &new_cap) {
+    if (is_big()) {
+        union_data.big_data.p.reset(copy_data(data, sz, new_cap));
+        union_data.big_data.capacity = new_cap;
+        data = union_data.big_data.p.get();
     } else {
-        if (curlen > 1) {
-            unique();
-            _data.elements->resize(curlen);
-        } else if (curlen == 1) {
-            ui tmp = *_data.elements->begin();
-            _data.elements.reset();
-            _data.element = tmp;
-        } else {
-            _data.elements.reset();
+        if (new_cap > SMALL_SIZE) {
+            new(&union_data.big_data) big(copy_data(data, sz, new_cap), new_cap);
+            data = union_data.big_data.p.get();
         }
     }
-    len = curlen;
 }
 
-void ui_vector::push_back(ui value) {
-    if (len == 0) {
-        _data.element = value;
-    } else if (len == 1) {
-        _data.elements = std::make_shared<std::vector<ui>>(1, _data.element);
-        _data.elements->push_back(value);
-    } else {
-        unique();
-        _data.elements->push_back(value);
-    }
-    len++;
-}
-
-void ui_vector::reverse() {
-    if (!small()) {
-        std::reverse(_data.elements->begin(), _data.elements->end());
+void ui_vector::reserve(size_t const &new_cap) {
+    if (new_cap > get_capacity()) {
+        change_capacity(new_cap);
     }
 }
 
-void ui_vector::pop_back() {
-    if (len > 2) {
-        unique();
-        _data.elements->pop_back();
-    } else if (len == 2) {
-        ui tmp = *_data.elements->begin();
-        _data.elements.reset();
-        _data.element = tmp;
-    } else {
-        _data.element = 0;
-    }
-    len--;
+ui_vector::ui_vector() : sz(0) {
+    data = union_data.small_data;
+    memset(data, 0, SMALL_SIZE * sizeof(u_int));
 }
 
-bool operator==(ui_vector const &a, ui_vector const &b) {
-    if (a.small() != b.small()) {
-        return false;
-    }
-    if (a.small()) {
-        return a._data.element == b._data.element;
-    }
-    return *a._data.elements == *b._data.elements;
-}
-
-void ui_vector::unique() {
-    if (!_data.elements.unique()) {
-        _data.elements = std::make_shared<std::vector<ui>>(*_data.elements);
-    }
-}
-
-bool ui_vector::small() const {
-    return len <= 1;
-}
-
-ui_vector &ui_vector::operator=(ui_vector const &other) {
-    if (!small()) {
-        _data.elements.reset();
-    }
-    if (other.small()) {
-        _data.element = other._data.element;
-    } else {
-        _data.elements = other._data.elements;
-    }
-    len = other.len;
-    return *this;
-}
-
-ui_vector::ui_vector() {
-    len = 0;
-    _data.element = 0;
+ui_vector::ui_vector(size_t const &new_size) : ui_vector() {
+    reserve(new_size);
+    sz = new_size;
 }
 
 ui_vector::~ui_vector() {
-    if (!small()) {
-        _data.elements.reset();
+    if (is_big()) {
+        union_data.big_data.~big();
     }
 }
+
+ui_vector::ui_vector(ui_vector const &other) : sz(other.sz) {
+    if (other.is_big()) {
+        new(&union_data.big_data) big(other.union_data.big_data);
+        data = union_data.big_data.p.get();
+    } else {
+        memcpy(union_data.small_data, other.union_data.small_data, SMALL_SIZE * sizeof(u_int));
+        data = union_data.small_data;
+    }
+}
+
+void ui_vector::resize(size_t const &new_size) {
+    reserve(new_size);
+    sz = new_size;
+}
+
+size_t ui_vector::size() const {
+    return sz;
+}
+
+bool ui_vector::empty() const {
+    return sz == 0;
+}
+
+void ui_vector::push_back(const u_int &val) {
+    if (get_capacity() == sz) {
+        reserve(get_new_capacity(sz));
+    }
+    divide();
+    data[sz++] = val;
+}
+
+size_t ui_vector::get_capacity() const {
+    return is_big() ? union_data.big_data.capacity : SMALL_SIZE;
+}
+
+void ui_vector::pop_back() {
+    if (is_big() && have_to_decrease(sz, get_capacity())) {
+        size_t new_capacity = get_capacity() / 2;
+        if (new_capacity <= SMALL_SIZE) {
+            u_int tmp[SMALL_SIZE];
+            memcpy(tmp, data, sz * sizeof(u_int));
+            union_data.big_data.~big();
+            memcpy(union_data.small_data, tmp, sz * sizeof(u_int));
+            memset(union_data.small_data + sz, 0, (SMALL_SIZE - sz) * sizeof(u_int));
+            data = union_data.small_data;
+        } else {
+            reserve(new_capacity);
+        }
+    }
+    divide();
+    --sz;
+}
+
+u_int &ui_vector::operator[](size_t const &ind) {
+    divide();
+    return data[ind];
+}
+
+u_int const &ui_vector::operator[](size_t const &ind) const {
+    return data[ind];
+}
+
+ui_vector &ui_vector::operator=(ui_vector const &other) {
+    ui_vector temp(other);
+    swap(temp);
+    return *this;
+}
+
+void ui_vector::swap(ui_vector &other) {
+    using std::swap;
+    if (!is_big() && !other.is_big()) {
+        for (size_t i = 0; i < SMALL_SIZE; ++i) {
+            swap(union_data.small_data[i], other.union_data.small_data[i]);
+        }
+    } else {
+        if (is_big() && !other.is_big()) {
+            swap_big_and_small(union_data, other.union_data);
+            data = union_data.small_data;
+            other.data = other.union_data.big_data.p.get();
+        } else {
+            if (!is_big() && other.is_big()) {
+                swap_big_and_small(other.union_data, union_data);
+                data = union_data.big_data.p.get();
+                other.data = other.union_data.small_data;
+            } else {
+                swap(union_data.big_data, other.union_data.big_data);
+                data = union_data.big_data.p.get();
+                other.data = other.union_data.big_data.p.get();
+            }
+        }
+    }
+    swap(sz, other.sz);
+}
+
+void ui_vector::swap_big_and_small(ui_vector::any_data &big_, ui_vector::any_data &small_) {
+    u_int temp[SMALL_SIZE];
+    memcpy(temp, small_.small_data, SMALL_SIZE * sizeof(u_int));
+    new(&small_.big_data) big(big_.big_data);
+    big_.big_data.~big();
+    memcpy(big_.small_data, temp, SMALL_SIZE * sizeof(u_int));
+
+}
+
+u_int ui_vector::back() {
+    return data[sz - 1];
+}
+
+bool operator==(ui_vector const &a, ui_vector const &b) {
+    if (a.sz != b.sz) {
+        return false;
+    }
+    for (size_t i = 0; i < a.sz; ++i) {
+        if (a[i] != b[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool operator!=(ui_vector const &a, ui_vector const &b) {
+    return !(a == b);
+}
+
+void ui_vector::divide() {
+    if (is_big() && !union_data.big_data.p.unique()) {
+        union_data.big_data.p.reset(copy_data(data, sz, sz));
+        union_data.big_data.capacity = sz;
+        data = union_data.big_data.p.get();
+    }
+}
+
+ui_vector::big::big(u_int *ptr, size_t const &cap) : capacity(cap), p(ptr) {}
