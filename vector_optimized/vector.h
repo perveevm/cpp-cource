@@ -234,7 +234,7 @@ public:
                 tmp.push_back(item);
             }
         } else {
-            while (size() > new_size) {
+            while (tmp.size() > new_size) {
                 tmp.pop_back();
             }
         }
@@ -245,6 +245,11 @@ public:
     void clear() {
         if (is_big()) {
             make_unique();
+
+            for (size_t i = 0; i < size(); ++i) {
+                cur_data_[i].~T();
+            }
+
             get_any(SIZE_INDEX) = 0;
         } else if (cur_data_ != nullptr) {
             buffer_.small.~T();
