@@ -24,116 +24,161 @@ class list {
 
     node_base fake_node_;
 
-    template<typename Type>
-    struct list_iterator {
-        node_base* ptr = nullptr;
+    struct list_iterator;
 
-        list_iterator() = default;
+    struct list_const_iterator {
+        typedef T value_type;
+        typedef list_const_iterator self_type;
+        typedef const T& reference;
+        typedef const T* pointer;
+        typedef std::bidirectional_iterator_tag iterator_category;
+        typedef int difference_type;
 
-        list_iterator(node_base* ptr) : ptr(ptr) {}
+        list_const_iterator(std::nullptr_t) = delete;
 
-        list_iterator& operator++() {
+        list_const_iterator(node_base* ptr) : ptr(ptr) {}
+
+        self_type operator++() {
             ptr = ptr->next;
             return *this;
         }
 
-        list_iterator& operator--() {
+        self_type operator--() {
             ptr = ptr->prev;
             return *this;
         }
 
-        const list_iterator operator++(int) {
-            list_iterator cur = *this;
+        self_type operator++(int) {
+            list_const_iterator cur = *this;
             ++(*this);
             return cur;
         }
 
-        const list_iterator operator--(int) {
-            list_iterator cur = *this;
+        self_type operator--(int) {
+            list_const_iterator cur = *this;
             --(*this);
             return cur;
         }
 
-        Type& operator*() {
-            return static_cast<node<Type>*>(ptr)->value;
+        const reference operator*() const {
+            return static_cast<node<T>*>(ptr)->value;
         }
 
-        bool operator==(const list_iterator<Type>& other) {
+        const pointer operator->() const {
+            return &static_cast<node<T>*>(ptr)->value;
+        }
+
+        bool operator==(const self_type& other) const {
             return ptr == other.ptr;
         }
 
-        bool operator!=(const list_iterator<Type>& other) {
+        bool operator==(const list_iterator& other) const {
+            return *this == list_const_iterator(other);
+        }
+
+        bool operator!=(const self_type& other) const {
             return !(*this == other);
         }
+
+        bool operator!=(const list_iterator& other) const {
+            return !(*this == list_const_iterator(other));
+        }
+
+        friend list;
+
+    private:
+        node_base* ptr = nullptr;
 
         node_base* get() {
             return ptr;
         }
     };
 
-    template<typename Type>
-    struct list_reverse_iterator {
-        node_base* ptr = nullptr;
+    struct list_iterator {
+        typedef T value_type;
+        typedef list_iterator self_type;
+        typedef T& reference;
+        typedef T* pointer;
+        typedef std::bidirectional_iterator_tag iterator_category;
+        typedef int difference_type;
 
-        list_reverse_iterator() = default;
+        list_iterator(std::nullptr_t) = delete;
 
-        list_reverse_iterator(node_base* ptr) : ptr(ptr) {}
+        list_iterator(node_base* ptr) : ptr(ptr) {}
 
-        list_reverse_iterator& operator++() {
-            ptr = ptr->prev;
-            return *this;
-        }
-
-        list_reverse_iterator& operator--() {
+        self_type operator++() {
             ptr = ptr->next;
             return *this;
         }
 
-        const list_reverse_iterator operator++(int) {
-            list_reverse_iterator cur = *this;
+        self_type operator--() {
+            ptr = ptr->prev;
+            return *this;
+        }
+
+        self_type operator++(int) {
+            list_iterator cur = *this;
             ++(*this);
             return cur;
         }
 
-        const list_reverse_iterator operator--(int) {
-            list_reverse_iterator cur = *this;
+        self_type operator--(int) {
+            list_iterator cur = *this;
             --(*this);
             return cur;
         }
 
-        Type& operator*() {
-            return static_cast<node<Type>*>(ptr->prev)->value;
+        reference operator*() const {
+            return static_cast<node<T>*>(ptr)->value;
         }
 
-        bool operator==(const list_reverse_iterator<Type>& other) {
+        pointer operator->() const {
+            return &static_cast<node<T>*>(ptr)->value;
+        }
+
+        bool operator==(const self_type& other) const {
             return ptr == other.ptr;
         }
 
-        bool operator!=(const list_reverse_iterator<Type>& other) {
+        bool operator==(const list_const_iterator& other) const {
+            return list_const_iterator(ptr) == other;
+        }
+
+        bool operator!=(const self_type& other) const {
             return !(*this == other);
         }
 
+        bool operator!=(const list_const_iterator& other) const {
+            return !(*this == other);
+        }
+
+        operator list_const_iterator() const {
+            return list_const_iterator(ptr);
+        }
+
+        friend list;
+
+    private:
+        node_base* ptr = nullptr;
+
         node_base* get() {
-            return ptr->prev;
+            return ptr;
         }
     };
 
 public:
     typedef T value_type;
 
-    typedef list_iterator<T> iterator;
-    typedef list_iterator<const T> const_iterator;
-    typedef list_reverse_iterator<T> reverse_iterator;
-    typedef list_reverse_iterator<const T> const_reverse_iterator;
+    typedef list_iterator iterator;
+    typedef list_const_iterator const_iterator;
+    typedef std::reverse_iterator<iterator> reverse_iterator;
+    typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
 
     list() = default;
 
     list(const list<T>& other) : fake_node_() {
-        node_base* first = other.fake_node_.next;
-
-        while (first != &other.fake_node_) {
-            push_back(static_cast<node<T>*>(first)->value);
-            first = first->next;
+        for (const auto& i : other) {
+            push_back(i);
         }
     }
 
@@ -157,7 +202,7 @@ public:
 
     void clear() {
         while (!empty()) {
-            pop_back();
+            pop_front();
         }
     }
 
@@ -206,7 +251,7 @@ public:
     }
 
     const_iterator end() const {
-        return const_iterator(&fake_node_);
+        return const_iterator(const_cast<node_base*>(&fake_node_));
     }
 
     reverse_iterator rbegin() {
@@ -214,7 +259,7 @@ public:
     }
 
     const_reverse_iterator rbegin() const {
-        return const_reverse_iterator(&fake_node_);
+        return const_reverse_iterator(const_cast<node_base*>(&fake_node_));
     }
 
     reverse_iterator rend() {
@@ -225,8 +270,7 @@ public:
         return const_reverse_iterator(fake_node_.next);
     }
 
-    template<typename InputIterator>
-    InputIterator insert(InputIterator pos, const T& item) {
+    iterator insert(const_iterator pos, const T& item) {
         auto* new_node = new node<T>(item);
 
         new_node->prev = pos.get()->prev;
@@ -238,23 +282,24 @@ public:
         return iterator(new_node);
     }
 
-    template<typename InputIterator>
-    InputIterator erase(InputIterator pos) {
+    iterator erase(const_iterator pos) {
         pos.get()->prev->next = pos.get()->next;
         pos.get()->next->prev = pos.get()->prev;
 
         iterator res(pos.get()->next);
-        delete pos.get();
+        delete static_cast<node<T>*>(pos.get());
 
         return res;
     }
 
-    template<typename InputIterator>
-    void splice(InputIterator pos, list<T>& other, InputIterator first, InputIterator last) {
+    void splice(const_iterator pos, list<T>& other, const_iterator first, const_iterator last) {
         if (first == last) {
             return;
         }
         --last;
+
+        first.get()->prev->next = last.get()->next;
+        last.get()->next->prev = first.get()->prev;
 
         first.get()->prev = pos.get()->prev;
         last.get()->next = pos.get();
@@ -265,19 +310,31 @@ public:
 
     template<typename Type>
     friend void swap(list<Type>& a, list<Type>& b);
-
-private:
 };
 
 template<typename T>
 void swap(list<T>& a, list<T>& b) { // Not work!
-//    a.fake_node_.prev->next = &b.fake_node_;
-//    a.fake_node_.next->prev = &b.fake_node_;
-//
-//    b.fake_node_.prev->next = &a.fake_node_;
-//    b.fake_node_.next->prev = &a.fake_node_;
-//
-//    std::swap(a.fake_node_, b.fake_node_);
+    if (!a.empty() && !b.empty()) {
+        a.fake_node_.prev->next = &b.fake_node_;
+        a.fake_node_.next->prev = &b.fake_node_;
+
+        b.fake_node_.prev->next = &a.fake_node_;
+        b.fake_node_.next->prev = &a.fake_node_;
+
+        std::swap(a.fake_node_, b.fake_node_);
+    } else if (!a.empty()) {
+        b.fake_node_.prev = a.fake_node_.prev;
+        b.fake_node_.next = a.fake_node_.next;
+
+        a.fake_node_.prev = &a.fake_node_;
+        a.fake_node_.next = &a.fake_node_;
+    } else if (!b.empty()) {
+        a.fake_node_.prev = b.fake_node_.prev;
+        a.fake_node_.next = b.fake_node_.next;
+
+        b.fake_node_.prev = &b.fake_node_;
+        b.fake_node_.next = &b.fake_node_;
+    }
 
 //    auto it = a.end();
 //    a.splice(a.end(), b, b.begin(), b.end());
