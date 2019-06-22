@@ -192,7 +192,7 @@ public:
         return *this;
     }
 
-    ~list() {
+    ~list() noexcept {
         clear();
     }
 
@@ -200,7 +200,7 @@ public:
         return (fake_node_.next == &fake_node_) && (fake_node_.prev == &fake_node_);
     }
 
-    void clear() {
+    void clear() noexcept {
         while (!empty()) {
             pop_front();
         }
@@ -210,7 +210,7 @@ public:
         insert(end(), item);
     }
 
-    void pop_back() {
+    void pop_back() noexcept {
         erase(--end());
     }
 
@@ -218,11 +218,11 @@ public:
         insert(begin(), item);
     }
 
-    void pop_front() {
+    void pop_front() noexcept {
         erase(begin());
     }
 
-    T& front() {
+    T& front() noexcept {
         return static_cast<node<T>*>(fake_node_.next)->value;
     }
 
@@ -230,7 +230,7 @@ public:
         return static_cast<const node<T>*>(fake_node_.next)->value;
     }
 
-    T& back() {
+    T& back() noexcept {
         return static_cast<node<T>*>(fake_node_.prev)->value;
     }
 
@@ -238,35 +238,35 @@ public:
         return static_cast<const node<T>*>(fake_node_.prev)->value;
     }
 
-    iterator begin() {
+    iterator begin() noexcept {
         return iterator(fake_node_.next);
     }
 
-    const_iterator begin() const {
+    const_iterator begin() const noexcept {
         return const_iterator(fake_node_.next);
     }
 
-    iterator end() {
+    iterator end() noexcept {
         return iterator(&fake_node_);
     }
 
-    const_iterator end() const {
+    const_iterator end() const noexcept {
         return const_iterator(const_cast<node_base*>(&fake_node_));
     }
 
-    reverse_iterator rbegin() {
+    reverse_iterator rbegin() noexcept {
         return reverse_iterator(&fake_node_);
     }
 
-    const_reverse_iterator rbegin() const {
+    const_reverse_iterator rbegin() const noexcept {
         return const_reverse_iterator(const_cast<node_base*>(&fake_node_));
     }
 
-    reverse_iterator rend() {
+    reverse_iterator rend() noexcept {
         return reverse_iterator(fake_node_.next);
     }
 
-    const_reverse_iterator rend() const {
+    const_reverse_iterator rend() const noexcept {
         return const_reverse_iterator(fake_node_.next);
     }
 
@@ -282,7 +282,7 @@ public:
         return iterator(new_node);
     }
 
-    iterator erase(const_iterator pos) {
+    iterator erase(const_iterator pos) noexcept {
         pos.get()->prev->next = pos.get()->next;
         pos.get()->next->prev = pos.get()->prev;
 
@@ -292,7 +292,7 @@ public:
         return res;
     }
 
-    void splice(const_iterator pos, list<T>& other, const_iterator first, const_iterator last) {
+    void splice(const_iterator pos, list<T>& other, const_iterator first, const_iterator last) noexcept {
         if (first == last) {
             return;
         }
