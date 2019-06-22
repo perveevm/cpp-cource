@@ -176,7 +176,7 @@ public:
 
     list() = default;
 
-    list(const list<T>& other) : fake_node_() {
+    list(const list<T>& other) : list() {
         for (const auto& i : other) {
             push_back(i);
         }
@@ -192,7 +192,7 @@ public:
         return *this;
     }
 
-    ~list() noexcept {
+    ~list() {
         clear();
     }
 
@@ -313,32 +313,24 @@ public:
 };
 
 template<typename T>
-void swap(list<T>& a, list<T>& b) { // Not work!
-    if (!a.empty() && !b.empty()) {
-        a.fake_node_.prev->next = &b.fake_node_;
+void swap(list<T>& a, list<T>& b) {
+    if (a.empty()) {
+        a.fake_node_.next = &b.fake_node_;
+        a.fake_node_.prev = &b.fake_node_;
+    } else {
         a.fake_node_.next->prev = &b.fake_node_;
-
-        b.fake_node_.prev->next = &a.fake_node_;
-        b.fake_node_.next->prev = &a.fake_node_;
-
-        std::swap(a.fake_node_, b.fake_node_);
-    } else if (!a.empty()) {
-        b.fake_node_.prev = a.fake_node_.prev;
-        b.fake_node_.next = a.fake_node_.next;
-
-        a.fake_node_.prev = &a.fake_node_;
-        a.fake_node_.next = &a.fake_node_;
-    } else if (!b.empty()) {
-        a.fake_node_.prev = b.fake_node_.prev;
-        a.fake_node_.next = b.fake_node_.next;
-
-        b.fake_node_.prev = &b.fake_node_;
-        b.fake_node_.next = &b.fake_node_;
+        a.fake_node_.prev->next = &b.fake_node_;
     }
 
-//    auto it = a.end();
-//    a.splice(a.end(), b, b.begin(), b.end());
-//    b.splice(b.begin(), a, a.begin(), it);
+    if (b.empty()) {
+        b.fake_node_.next = &a.fake_node_;
+        b.fake_node_.prev = &a.fake_node_;
+    } else {
+        b.fake_node_.next->prev = &a.fake_node_;
+        b.fake_node_.prev->next = &a.fake_node_;
+    }
+
+    std::swap(a.fake_node_, b.fake_node_);
 }
 
 #endif //LIST_LIST_H
