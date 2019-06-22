@@ -126,7 +126,7 @@ public:
     typedef list_reverse_iterator<T> reverse_iterator;
     typedef list_reverse_iterator<const T> const_reverse_iterator;
 
-    list() noexcept : fake_node_() {}
+    list() = default;
 
     list(const list<T>& other) : fake_node_() {
         node_base* first = other.fake_node_.next;
@@ -279,8 +279,9 @@ void swap(list<T>& a, list<T>& b) { // Not work!
 //
 //    std::swap(a.fake_node_, b.fake_node_);
 
-    a.splice(a.begin(), b, b.begin(), b.end());
-
+//    auto it = a.end();
+//    a.splice(a.end(), b, b.begin(), b.end());
+//    b.splice(b.begin(), a, a.begin(), it);
 }
 
 #endif //LIST_LIST_H
