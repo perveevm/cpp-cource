@@ -136,7 +136,7 @@ struct set {
         return ptr;
     }
 
-    set_const_iterator lower_bound(const T& value, node_base* ptr) const noexcept {
+    set_const_iterator lower_bound(const T& value, node_base* ptr) const {
         if (ptr == nullptr) {
             return end();
         }
@@ -266,7 +266,8 @@ public:
     iterator erase(const_iterator it) noexcept {
         node_base* cur = it.get();
         node_base* prev = cur->parent;
-        iterator res = upper_bound(*it);
+        iterator res = it;
+        ++res;
 
         bool is_left = (prev->left == cur);
 
@@ -336,12 +337,12 @@ public:
         return res;
     }
 
-    const_iterator find(const T& value) const noexcept {
+    const_iterator find(const T& value) const {
         node_base* cur = fake_node_.left;
 
         while (cur != nullptr) {
             if (static_cast<node<T>*>(cur)->value == value) {
-                return iterator(cur);
+                return const_iterator(cur);
             }
 
             if (static_cast<node<T>*>(cur)->value < value) {
@@ -354,11 +355,11 @@ public:
         return end();
     }
 
-    const_iterator lower_bound(const T& value) const noexcept {
+    const_iterator lower_bound(const T& value) const {
         return lower_bound(value, fake_node_.left);
     }
 
-    const_iterator upper_bound(const T& value) const noexcept {
+    const_iterator upper_bound(const T& value) const {
         if (find(value) != end()) {
             return ++lower_bound(value);
         } else {
