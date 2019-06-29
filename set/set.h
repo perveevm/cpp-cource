@@ -169,9 +169,14 @@ public:
     set() = default;
 
     set(const set<T>& other) {
-        for (const auto& item : other) {
-            insert(item);
-        }
+    	try {
+	        for (const auto& item : other) {
+	            insert(item);
+	        }
+	    } catch (...) {
+	    	clear();
+	    	throw;
+	    }
     }
 
     set<T>& operator=(const set<T>& other) {
